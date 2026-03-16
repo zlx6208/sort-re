@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>選擇排序動畫</title>
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+}
+#container{
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    height:300px;
+    margin-top:40px;
+}
+.bar{
+    width:30px;
+    margin:5px;
+    background:steelblue;
+    color:white;
+    text-align:center;
+}
+button{
+    padding:10px 20px;
+    font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>選擇排序動畫演示</h2>
+<button onclick="selectionSort()">開始排序</button>
+
+<div id="container"></div>
+
+<script>
+let arr = [5,3,8,4,2,7,1,6];
+let container = document.getElementById("container");
+
+function draw(){
+    container.innerHTML="";
+    arr.forEach(value=>{
+        let bar=document.createElement("div");
+        bar.className="bar";
+        bar.style.height=value*30+"px";
+        bar.innerText=value;
+        container.appendChild(bar);
+    });
+}
+
+draw();
+
+async function selectionSort(){
+    let bars=document.getElementsByClassName("bar");
+
+    for(let i=0;i<arr.length-1;i++){
+        let minIndex=i;
+
+        // 高亮當前 i
+        bars[i].style.background="orange";
+
+        for(let j=i+1;j<arr.length;j++){
+            // 高亮比較的元素
+            bars[j].style.background="red";
+            await new Promise(r=>setTimeout(r,500));
+
+            if(arr[j] < arr[minIndex]){
+                // 如果找到更小的，重置之前的最小
+                if(minIndex !== i){
+                    bars[minIndex].style.background="steelblue";
+                }
+                minIndex=j;
+                bars[minIndex].style.background="yellow"; // 高亮新最小
+            } else {
+                bars[j].style.background="steelblue";
+            }
+        }
+
+        // 交換
+        if(minIndex !== i){
+            let temp=arr[i];
+            arr[i]=arr[minIndex];
+            arr[minIndex]=temp;
+            draw();
+
+            bars=document.getElementsByClassName("bar");
+            // 高亮交換的元素
+            bars[i].style.background="green";
+            bars[minIndex].style.background="green";
+            await new Promise(r=>setTimeout(r,500));
+            bars[i].style.background="steelblue";
+            bars[minIndex].style.background="steelblue";
+        } else {
+            bars[i].style.background="steelblue";
+        }
+    }
+}
+</script>
+
+</body>
+</html></content>
+<parameter name="filePath">d:\11428137\114-2\260302\selection-sort.html
