@@ -33,12 +33,21 @@ button{
 
 <h2>氣泡排序動畫演示</h2>
 <button onclick="bubbleSort()">開始排序</button>
+<button onclick="resetArray()">重新開始</button>
 
 <div id="container"></div>
 
 <script>
-let arr = [5,3,8,4,2,7,1,6];
+const initialArr = [5,3,8,4,2,7,1,6];
+let arr = initialArr.slice();
 let container = document.getElementById("container");
+let stopRequested = false;
+
+function resetArray(){
+    stopRequested = true;
+    arr = initialArr.slice();
+    draw();
+}
 
 function draw(){
     container.innerHTML="";
@@ -54,24 +63,28 @@ function draw(){
 draw();
 
 async function bubbleSort(){
+    stopRequested = false;
     let bars=document.getElementsByClassName("bar");
 
     for(let i=0;i<arr.length;i++){
+        if(stopRequested) return;
         for(let j=0;j<arr.length-i-1;j++){
+            if(stopRequested) return;
 
             bars[j].style.background="red";
             bars[j+1].style.background="red";
 
             await new Promise(r=>setTimeout(r,500));
+            if(stopRequested) return;
 
             if(arr[j] > arr[j+1]){
                 let temp=arr[j];
                 arr[j]=arr[j+1];
                 arr[j+1]=temp;
                 draw();
+                bars=document.getElementsByClassName("bar");
             }
 
-            bars=document.getElementsByClassName("bar");
             bars[j].style.background="steelblue";
             bars[j+1].style.background="steelblue";
         }

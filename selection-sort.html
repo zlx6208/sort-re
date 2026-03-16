@@ -33,12 +33,21 @@ button{
 
 <h2>選擇排序動畫演示</h2>
 <button onclick="selectionSort()">開始排序</button>
+<button onclick="resetArray()">重新開始</button>
 
 <div id="container"></div>
 
 <script>
-let arr = [5,3,8,4,2,7,1,6];
+const initialArr = [5,3,8,4,2,7,1,6];
+let arr = initialArr.slice();
 let container = document.getElementById("container");
+let stopRequested = false;
+
+function resetArray(){
+    stopRequested = true;
+    arr = initialArr.slice();
+    draw();
+}
 
 function draw(){
     container.innerHTML="";
@@ -54,18 +63,22 @@ function draw(){
 draw();
 
 async function selectionSort(){
+    stopRequested = false;
     let bars=document.getElementsByClassName("bar");
 
     for(let i=0;i<arr.length-1;i++){
+        if(stopRequested) return;
         let minIndex=i;
 
         // 高亮當前 i
         bars[i].style.background="orange";
 
         for(let j=i+1;j<arr.length;j++){
+            if(stopRequested) return;
             // 高亮比較的元素
             bars[j].style.background="red";
             await new Promise(r=>setTimeout(r,500));
+            if(stopRequested) return;
 
             if(arr[j] < arr[minIndex]){
                 // 如果找到更小的，重置之前的最小
@@ -91,6 +104,7 @@ async function selectionSort(){
             bars[i].style.background="green";
             bars[minIndex].style.background="green";
             await new Promise(r=>setTimeout(r,500));
+            if(stopRequested) return;
             bars[i].style.background="steelblue";
             bars[minIndex].style.background="steelblue";
         } else {
