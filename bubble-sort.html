@@ -22,7 +22,10 @@ body{
     padding:25px;
 }
 
-h1{text-align:center;margin-bottom:15px;}
+h1{
+    text-align:center;
+    margin-bottom:15px;
+}
 
 .controls{
     display:flex;
@@ -54,9 +57,7 @@ button{
     position:relative;
     overflow:hidden;
     background:#fafafa;
-
-    /* ✅ 左右留白（你要的1公分效果） */
-    padding:0 20px;
+    padding:0 20px; /* 左右留白 */
     box-sizing:border-box;
 }
 
@@ -102,7 +103,7 @@ button{
 
 <button onclick="generateArray()">產生數列</button>
 <button onclick="startSort()">開始排序</button>
-<button onclick="pauseSort()">暫停</button>
+<button onclick="pauseSort()">暫停/繼續</button>
 <button onclick="resetSort()">重置</button>
 
 </div>
@@ -121,24 +122,33 @@ button{
 
 const canvas = document.getElementById("canvas");
 
-let array=[];
-let n=8;
+let array = [];
+let n = 8;
 
-let isSorting=false;
-let isPaused=false;
+let isSorting = false;
+let isPaused = false;
 
-let cmp=0, swp=0, mov=0;
+let cmp = 0;
+let swp = 0;
+let mov = 0;
 
-// 取得 n
-function getN(){
-    let v=parseInt(document.getElementById("numInput").value);
-    return (isNaN(v)||v<3)?8:v;
+// 👉 返回首頁
+function goBack(){
+    if(confirm("確定要返回上一頁嗎？")){
+        window.history.back();
+    }
 }
 
-// 產生數列
+// 👉 取得組數
+function getN(){
+    let v = parseInt(document.getElementById("numInput").value);
+    return (isNaN(v) || v < 3) ? 8 : v;
+}
+
+// 👉 產生數列
 function generateArray(){
-    n=getN();
-    array=[];
+    n = getN();
+    array = [];
 
     for(let i=0;i<n;i++){
         array.push(Math.floor(Math.random()*300)+20);
@@ -147,50 +157,47 @@ function generateArray(){
     draw();
 }
 
-// 畫圖（✔置中核心在這）
+// 👉 畫圖（置中 + 留白 + 自動寬度）
 function draw(){
-    canvas.innerHTML="";
+    canvas.innerHTML = "";
 
-    const usableWidth = canvas.clientWidth - 40; // 留白後可用空間
+    const usableWidth = canvas.clientWidth - 40;
     const barWidth = usableWidth / n;
 
     array.forEach((v,i)=>{
-        const bar=document.createElement("div");
-        bar.className="bar";
+        const bar = document.createElement("div");
+        bar.className = "bar";
 
-        // ✅ 每格置中
-        const x = 20 + i*barWidth + (barWidth*0.2);
-
+        const x = 20 + i * barWidth + (barWidth*0.2);
         bar.style.left = x + "px";
 
-        // ✅ 比格子更窄 → 視覺置中
-        bar.style.width = (barWidth*0.6) + "px";
+        bar.style.width = barWidth * 0.6 + "px";
 
-        const h=(v/320)*380;
-        bar.style.height=h+"px";
+        const h = (v / 320) * 380;
+        bar.style.height = h + "px";
 
-        bar.textContent=v;
+        bar.textContent = v;
 
         canvas.appendChild(bar);
     });
 }
 
-// sleep
+// 👉 sleep
 function sleep(ms){
     return new Promise(r=>setTimeout(r,ms));
 }
 
-// 更新統計
+// 👉 更新統計
 function update(){
-    document.getElementById("cmp").textContent=cmp;
-    document.getElementById("swp").textContent=swp;
-    document.getElementById("mov").textContent=mov;
+    document.getElementById("cmp").textContent = cmp;
+    document.getElementById("swp").textContent = swp;
+    document.getElementById("mov").textContent = mov;
 }
 
-// bubble sort
+// 👉 Bubble Sort
 async function bubbleSort(){
 
-    let bars=document.getElementsByClassName("bar");
+    let bars = document.getElementsByClassName("bar");
 
     for(let i=0;i<n-1;i++){
         for(let j=0;j<n-i-1;j++){
@@ -205,16 +212,17 @@ async function bubbleSort(){
 
             await sleep(300);
 
-            if(array[j]>array[j+1]){
+            if(array[j] > array[j+1]){
 
-                [array[j],array[j+1]]=[array[j+1],array[j]];
+                [array[j],array[j+1]] = [array[j+1],array[j]];
+
                 swp++;
-                mov++; // ✅ 每次交換 = 移動
+                mov++; // 每次交換 = 移動
 
                 update();
-                draw();
 
-                bars=document.getElementsByClassName("bar");
+                draw();
+                bars = document.getElementsByClassName("bar");
 
                 bars[j].classList.add("swapping");
                 bars[j+1].classList.add("swapping");
@@ -229,29 +237,43 @@ async function bubbleSort(){
         bars[n-i-1].classList.add("sorted");
     }
 
-    isSorting=false;
+    isSorting = false;
 }
 
-// 控制
+// 👉 開始排序（✔ 這裡已幫你加「統計歸零」）
 function startSort(){
     if(isSorting) return;
-    isSorting=true;
+
+    isSorting = true;
+
+    // 🔥 每次開始排序前歸零
+    cmp = 0;
+    swp = 0;
+    mov = 0;
+    update();
+
     bubbleSort();
 }
 
+// 👉 暫停
 function pauseSort(){
-    isPaused=!isPaused;
+    isPaused = !isPaused;
 }
 
+// 👉 重置
 function resetSort(){
-    isSorting=false;
-    isPaused=false;
-    cmp=swp=mov=0;
+    isSorting = false;
+    isPaused = false;
+
+    cmp = 0;
+    swp = 0;
+    mov = 0;
     update();
+
     generateArray();
 }
 
-// init
+// 👉 初始化
 generateArray();
 
 </script>
