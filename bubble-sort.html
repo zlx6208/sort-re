@@ -6,11 +6,11 @@
 <title>氣泡排序法視覺化</title>
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+*{margin:0;padding:0;box-sizing:border-box;}
 
 body{
-    font-family:'Microsoft JhengHei',Arial;
-    background: linear-gradient(135deg,#667eea,#764ba2);
+    font-family:"Microsoft JhengHei";
+    background:linear-gradient(135deg,#667eea,#764ba2);
     padding:20px;
 }
 
@@ -22,35 +22,28 @@ body{
     padding:25px;
 }
 
-h1{
-    text-align:center;
-    margin-bottom:15px;
-}
+h1{text-align:center;margin-bottom:15px;}
 
 .controls{
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
     gap:10px;
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 
 input,button{
     padding:10px;
-    border:none;
     border-radius:10px;
+    border:none;
     font-size:14px;
 }
 
 button{
-    cursor:pointer;
     background:#2196F3;
     color:white;
+    cursor:pointer;
     font-weight:bold;
-}
-
-button:hover{
-    opacity:0.85;
 }
 
 #canvas{
@@ -61,6 +54,10 @@ button:hover{
     position:relative;
     overflow:hidden;
     background:#fafafa;
+
+    /* ✅ 左右留白（你要的1公分效果） */
+    padding:0 20px;
+    box-sizing:border-box;
 }
 
 .bar{
@@ -72,35 +69,21 @@ button:hover{
     justify-content:center;
     color:white;
     font-size:12px;
-    border-radius:5px 5px 0 0;
-    transition: all 0.3s ease;
+    border-radius:6px 6px 0 0;
+    transition:all 0.3s ease;
 }
 
-.bar.comparing{ background:orange; }
-.bar.swapping{ background:red; }
-.bar.sorted{ background:green; }
+.bar.comparing{background:orange;}
+.bar.swapping{background:red;}
+.bar.sorted{background:green;}
 
-/* 圖例 */
-.legend{
+.stats{
     display:flex;
     justify-content:center;
-    gap:20px;
-    margin-top:15px;
-    font-size:14px;
+    gap:30px;
+    margin-top:10px;
+    font-size:16px;
 }
-
-.box{
-    width:15px;
-    height:15px;
-    display:inline-block;
-    margin-right:5px;
-    border-radius:3px;
-}
-
-.blue{ background:#2196F3; }
-.orange{ background:orange; }
-.red{ background:red; }
-.green{ background:green; }
 
 </style>
 </head>
@@ -113,62 +96,47 @@ button:hover{
 
 <div class="controls">
 
-<button onclick="goBack()">⬅️ 返回</button>
-
 <input id="numInput" type="number" placeholder="組數(預設8)" min="3" max="50">
 
 <button onclick="generateArray()">產生數列</button>
 <button onclick="startSort()">開始排序</button>
-<button onclick="pauseSort()">暫停 / 繼續</button>
+<button onclick="pauseSort()">暫停</button>
 <button onclick="resetSort()">重置</button>
-
-<label>速度</label>
-<input type="range" id="speed" min="50" max="1000" value="400">
 
 </div>
 
 <div id="canvas"></div>
 
-<div class="legend">
-    <div><span class="box blue"></span>未排序</div>
-    <div><span class="box orange"></span>比較中</div>
-    <div><span class="box red"></span>交換中</div>
-    <div><span class="box green"></span>已排序</div>
+<div class="stats">
+    <div>比較次數：<span id="cmp">0</span></div>
+    <div>交換次數：<span id="swp">0</span></div>
+    <div>移動次數：<span id="mov">0</span></div>
 </div>
 
 </div>
 
 <script>
+
 const canvas = document.getElementById("canvas");
 
-let array = [];
-let n = 8;
-let isSorting = false;
-let isPaused = false;
-let speed = 400;
+let array=[];
+let n=8;
 
-// 返回
-function goBack(){
-    if(confirm("確定要返回上一頁嗎？")){
-        window.history.back();
-    }
-}
+let isSorting=false;
+let isPaused=false;
 
-// 取得組數
+let cmp=0, swp=0, mov=0;
+
+// 取得 n
 function getN(){
-    let val = parseInt(document.getElementById("numInput").value);
-    return (isNaN(val) || val < 3) ? 8 : val;
+    let v=parseInt(document.getElementById("numInput").value);
+    return (isNaN(v)||v<3)?8:v;
 }
-
-// 速度控制
-document.getElementById("speed").oninput = (e)=>{
-    speed = parseInt(e.target.value);
-};
 
 // 產生數列
 function generateArray(){
-    n = getN();
-    array = [];
+    n=getN();
+    array=[];
 
     for(let i=0;i<n;i++){
         array.push(Math.floor(Math.random()*300)+20);
@@ -177,23 +145,29 @@ function generateArray(){
     draw();
 }
 
-// 畫圖
+// 畫圖（✔置中核心在這）
 function draw(){
-    canvas.innerHTML = "";
+    canvas.innerHTML="";
 
-    const barWidth = canvas.clientWidth / n;
+    const usableWidth = canvas.clientWidth - 40; // 留白後可用空間
+    const barWidth = usableWidth / n;
 
     array.forEach((v,i)=>{
-        const bar = document.createElement("div");
-        bar.className = "bar";
+        const bar=document.createElement("div");
+        bar.className="bar";
 
-        bar.style.left = (i * barWidth) + "px";
-        bar.style.width = Math.max(barWidth * 0.6, 5) + "px";
+        // ✅ 每格置中
+        const x = 20 + i*barWidth + (barWidth*0.2);
 
-        const height = (v / 320) * 380;
-        bar.style.height = height + "px";
+        bar.style.left = x + "px";
 
-        bar.textContent = v;
+        // ✅ 比格子更窄 → 視覺置中
+        bar.style.width = (barWidth*0.6) + "px";
+
+        const h=(v/320)*380;
+        bar.style.height=h+"px";
+
+        bar.textContent=v;
 
         canvas.appendChild(bar);
     });
@@ -204,31 +178,46 @@ function sleep(ms){
     return new Promise(r=>setTimeout(r,ms));
 }
 
-// Bubble Sort
+// 更新統計
+function update(){
+    document.getElementById("cmp").textContent=cmp;
+    document.getElementById("swp").textContent=swp;
+    document.getElementById("mov").textContent=mov;
+}
+
+// bubble sort
 async function bubbleSort(){
-    let bars = document.getElementsByClassName("bar");
+
+    let bars=document.getElementsByClassName("bar");
 
     for(let i=0;i<n-1;i++){
         for(let j=0;j<n-i-1;j++){
 
             while(isPaused) await sleep(100);
 
+            cmp++;
+            update();
+
             bars[j].classList.add("comparing");
             bars[j+1].classList.add("comparing");
 
-            await sleep(speed);
+            await sleep(300);
 
-            if(array[j] > array[j+1]){
+            if(array[j]>array[j+1]){
 
-                [array[j],array[j+1]] = [array[j+1],array[j]];
+                [array[j],array[j+1]]=[array[j+1],array[j]];
+                swp++;
+                mov++; // ✅ 每次交換 = 移動
 
+                update();
                 draw();
-                bars = document.getElementsByClassName("bar");
+
+                bars=document.getElementsByClassName("bar");
 
                 bars[j].classList.add("swapping");
                 bars[j+1].classList.add("swapping");
 
-                await sleep(speed);
+                await sleep(300);
             }
 
             bars[j].classList.remove("comparing","swapping");
@@ -238,27 +227,29 @@ async function bubbleSort(){
         bars[n-i-1].classList.add("sorted");
     }
 
-    isSorting = false;
+    isSorting=false;
 }
 
 // 控制
 function startSort(){
     if(isSorting) return;
-    isSorting = true;
+    isSorting=true;
     bubbleSort();
 }
 
 function pauseSort(){
-    isPaused = !isPaused;
+    isPaused=!isPaused;
 }
 
 function resetSort(){
-    isSorting = false;
-    isPaused = false;
+    isSorting=false;
+    isPaused=false;
+    cmp=swp=mov=0;
+    update();
     generateArray();
 }
 
-// 初始化
+// init
 generateArray();
 
 </script>
