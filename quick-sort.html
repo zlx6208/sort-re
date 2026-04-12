@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>Merge Sort 視覺化</title>
+
+<style>
+body{
+    font-family:Microsoft JhengHei;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:20px;
+}
+
+#canvas{
+    height:420px;
+    position:relative;
+    background:#fafafa;
+    border:2px solid #ccc;
+    border-radius:15px;
+    overflow:hidden;
+    padding:0 20px;
+}
+
+.bar{
+    position:absolute;
+    bottom:0;
+    background:#2196F3;
+    color:white;
+    font-size:12px;
+    text-align:center;
+    border-radius:5px 5px 0 0;
+    transition:0.3s;
+}
+
+.bar.active{background:orange;}
+.bar.sorted{background:#4CAF50;}
+
+button{
+    padding:10px;
+    margin:5px;
+    border:none;
+    border-radius:10px;
+    background:#2196F3;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Merge Sort（合併排序）</h2>
+
+<button onclick="goBack()">返回</button>
+<button onclick="generate()">生成</button>
+<button onclick="start()">開始排序</button>
+
+<div id="canvas"></div>
+
+</div>
+
+<script>
+
+let arr=[],n=8;
+
+function goBack(){
+    window.history.back();
+}
+
+function generate(){
+n=8;
+arr=Array.from({length:n},()=>Math.floor(Math.random()*300)+20);
+draw();
+}
+
+function draw(){
+let c=document.getElementById("canvas");
+c.innerHTML="";
+let w=(c.clientWidth-40)/n;
+
+arr.forEach((v,i)=>{
+let b=document.createElement("div");
+b.className="bar";
+b.style.left=(20+i*w+w*0.2)+"px";
+b.style.width=w*0.6+"px";
+b.style.height=(v/320)*380+"px";
+b.textContent=v;
+c.appendChild(b);
+});
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function mergeSort(l,r){
+if(l>=r) return;
+
+let m=Math.floor((l+r)/2);
+
+await mergeSort(l,m);
+await mergeSort(m+1,r);
+await merge(l,m,r);
+}
+
+async function merge(l,m,r){
+
+let temp=[];
+let i=l,j=m+1;
+
+let bars=document.getElementsByClassName("bar");
+
+while(i<=m && j<=r){
+
+bars[i].classList.add("active");
+bars[j].classList.add("active");
+
+await sleep(300);
+
+if(arr[i]<arr[j]){
+temp.push(arr[i++]);
+}else{
+temp.push(arr[j++]);
+}
+}
+
+while(i<=m) temp.push(arr[i++]);
+while(j<=r) temp.push(arr[j++]);
+
+for(let k=l;k<=r;k++){
+arr[k]=temp[k-l];
+}
+
+draw();
+}
+
+async function start(){
+await mergeSort(0,n-1);
+
+document.querySelectorAll(".bar").forEach(b=>{
+b.className="bar sorted";
+});
+}
+
+generate();
+
+</script>
+
+</body>
+</html>
