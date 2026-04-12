@@ -1,253 +1,225 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>氣泡排序法視覺化</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh; padding: 20px;
-        }
-        .container {
-            max-width: 1200px; margin: 0 auto;
-            background: rgba(255,255,255,0.95); border-radius: 20px;
-            padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        h1 { text-align: center; color: #333; margin-bottom: 10px; font-size: 2.5em; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 1.2em; }
-        
-        .controls {
-            display: flex; justify-content: center; gap: 15px;
-            margin-bottom: 30px; flex-wrap: wrap;
-        }
-        button {
-            padding: 12px 24px; border: none; border-radius: 25px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-            transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .btn-primary { background: #4CAF50; color: white; }
-        .btn-primary:hover { background: #45a049; transform: translateY(-2px); }
-        .btn-secondary { background: #2196F3; color: white; }
-        .btn-secondary:hover { background: #1976D2; transform: translateY(-2px); }
-        .btn-danger { background: #f44336; color: white; }
-        .btn-danger:hover { background: #da190b; transform: translateY(-2px); }
-        .btn-warning { background: #ff9800; color: white; }
-        .btn-warning:hover { background: #e68900; transform: translateY(-2px); }
-        .btn-info { background: #9C27B0; color: white; }  /* 新增返回按鈕樣式 */
-        .btn-info:hover { background: #7B1FA2; transform: translateY(-2px); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>氣泡排序法視覺化</title>
 
-        .stats {
-            display: flex; justify-content: space-around;
-            margin-bottom: 30px; padding: 20px;
-            background: #f8f9fa; border-radius: 15px;
-        }
-        .stat-item { text-align: center; }
-        .stat-number { font-size: 2em; font-weight: bold; color: #2196F3; }
-        .stat-label { color: #666; font-size: 0.9em; }
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-        #canvas {
-            width: 100%; height: 400px; border: 3px solid #ddd;
-            border-radius: 15px; background: #fafafa;
-            margin-bottom: 30px; position: relative; overflow: hidden;
-        }
-        .bar {
-            position: absolute; bottom: 0; background: #2196F3;
-            transition: all 0.5s ease;  /* 8組用稍慢動畫 */
-            display: flex; align-items: flex-end; justify-content: center;
-            color: white; font-weight: bold; font-size: 16px;  /* 放大字體 */
-            border-radius: 5px 5px 0 0; box-shadow: 0 3px 15px rgba(0,0,0,0.2);
-        }
-        .bar.comparing { background: #ff9800 !important; animation: pulse 0.6s infinite; }
-        .bar.swapping { background: #f44336 !important; animation: bounce 0.8s infinite; }
-        .bar.sorted { background: #4CAF50 !important; }
-        
-        @keyframes pulse { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.08); } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+body {
+    font-family: 'Microsoft JhengHei', Arial;
+    background: linear-gradient(135deg,#667eea,#764ba2);
+    min-height: 100vh;
+    padding: 20px;
+}
 
-        .info { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-top: 20px; }
-        .step-info { font-size: 1.2em; margin-bottom: 10px; color: #1976D2; font-weight: bold; }
-    </style>
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 30px;
+}
+
+h1 { text-align:center; margin-bottom:10px; }
+
+.controls {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:20px;
+}
+
+input, button {
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    font-size:14px;
+}
+
+button {
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.btn { background:#2196F3; color:white; }
+.btn:hover { opacity:0.8; }
+
+#canvas {
+    width:100%;
+    height:400px;
+    border:2px solid #ccc;
+    border-radius:15px;
+    position:relative;
+    overflow:hidden;
+    background:#fafafa;
+}
+
+.bar {
+    position:absolute;
+    bottom:0;
+    background:#2196F3;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    color:white;
+    font-size:14px;
+    font-weight:bold;
+    border-radius:5px 5px 0 0;
+    transition: all 0.4s ease;
+}
+
+.bar.comparing { background: orange; }
+.bar.swapping { background: red; }
+.bar.sorted { background: green; }
+
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>🫧 氣泡排序法視覺化 (8組)</h1>
-        <p class="subtitle">Bubble Sort - 8個項目，清楚觀察排序過程</p>
 
-        <div class="controls">
-            <button class="btn-info" onclick="goBack()">⬅️ 返回頁面</button>  <!-- 新增按鈕 -->
-            <button class="btn-primary" onclick="generateArray()">🔄 新數組</button>
-            <button class="btn-secondary" onclick="startSort()">▶️ 開始排序</button>
-            <button class="btn-warning" onclick="pauseSort()">⏸️ 暫停</button>
-            <button class="btn-danger" onclick="resetSort()">🔄 重置</button>
-        </div>
+<div class="container">
 
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-number" id="comparisons">0</div>
-                <div class="stat-label">比較次數</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="swaps">0</div>
-                <div class="stat-label">交換次數</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number" id="time">0</div>
-                <div class="stat-label">執行時間(ms)</div>
-            </div>
-        </div>
+<h1>氣泡排序法視覺化</h1>
 
-        <canvas id="canvas"></canvas>
+<div class="controls">
 
-        <div class="info">
-            <div class="step-info" id="stepInfo">點擊「新數組」開始（預設8組項目）</div>
-            <div><strong>特色：</strong>返回頁面按鈕 | 8組大柱子 | 慢速動畫 | 清楚步驟說明</div>
-        </div>
-    </div>
+<input id="numInput" type="number" placeholder="組數 (預設8)" min="3" max="50">
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let array = []; 
-        let n = 8;  // ✅ 修改：預設8組項目
-        let animationId; let isSorting = false; let isPaused = false;
-        let comparisons = 0; let swaps = 0; let startTime = 0;
+<button class="btn" onclick="generateArray()">產生數列</button>
+<button class="btn" onclick="startSort()">開始排序</button>
+<button class="btn" onclick="pauseSort()">暫停/繼續</button>
+<button class="btn" onclick="resetSort()">重置</button>
 
-        canvas.width = canvas.offsetWidth; canvas.height = 400;
+<label>速度</label>
+<input type="range" id="speed" min="50" max="1000" value="400">
 
-        // ✅ 新增：返回頁面功能
-        function goBack() {
-            if (confirm('確定要返回上一頁嗎？\n排序進度將會重置。')) {
-                window.history.back();  // 返回上一頁
-            }
-        }
+</div>
 
-        function generateArray() {
-            array = [];
-            for (let i = 0; i < n; i++) {  // 只產生8組
-                array.push(Math.floor(Math.random() * 300) + 20);
-            }
-            drawArray();
-            updateStats();
-            document.getElementById('stepInfo').textContent = 
-                `✅ 已產生${n}組隨機數組，點擊「開始排序」觀察！`;
-        }
+<div id="canvas"></div>
 
-        function drawArray() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const barWidth = canvas.width / n;  // 8組更寬
-            
-            array.forEach((value, i) => {
-                const barHeight = (value / 320) * (canvas.height - 60);
-                const x = i * barWidth;
-                const bar = document.querySelector(`[data-index="${i}"]`);
-                
-                if (bar) {
-                    bar.style.left = x + 'px';
-                    bar.style.width = (barWidth * 0.9) + 'px';  // 間距更好看
-                    bar.style.height = barHeight + 'px';
-                    bar.textContent = value;
-                } else {
-                    const barElement = document.createElement('div');
-                    barElement.className = 'bar';
-                    barElement.dataset.index = i;
-                    barElement.style.left = x + 'px';
-                    barElement.style.width = (barWidth * 0.9) + 'px';
-                    barElement.style.height = barHeight + 'px';
-                    barElement.textContent = value;
-                    canvas.parentNode.appendChild(barElement);
-                }
-            });
-        }
+</div>
 
-        function updateStats() {
-            document.getElementById('comparisons').textContent = comparisons;
-            document.getElementById('swaps').textContent = swaps;
-            if (startTime) document.getElementById('time').textContent = Date.now() - startTime;
-        }
+<script>
+const canvas = document.getElementById("canvas");
 
-        async function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+let array = [];
+let n = 8;
+let isSorting = false;
+let isPaused = false;
 
-        async function bubbleSort() {
-            const bars = document.querySelectorAll('.bar');
-            let swapped;
+let speed = 400;
 
-            for (let i = 0; i < n - 1; i++) {
-                swapped = false;
-                
-                for (let j = 0; j < n - i - 1; j++) {
-                    if (isPaused) {
-                        while (isPaused && isSorting) await sleep(100);
-                    }
+// 👉 取得組數
+function getN(){
+    let val = parseInt(document.getElementById("numInput").value);
+    return (isNaN(val) || val < 3) ? 8 : val;
+}
 
-                    bars[j].classList.add('comparing');
-                    bars[j + 1].classList.add('comparing');
-                    document.getElementById('stepInfo').textContent = 
-                        `第${i+1}輪：比較 [${j}](${array[j]}) ↔ [${j+1}](${array[j+1]})`;
-                    
-                    comparisons++; updateStats(); await sleep(800);  // 8組用較慢速度
+// 👉 速度控制
+document.getElementById("speed").oninput = (e)=>{
+    speed = parseInt(e.target.value);
+};
 
-                    if (array[j] > array[j + 1]) {
-                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
-                        swaps++;
-                        
-                        bars[j].classList.add('swapping');
-                        bars[j + 1].classList.add('swapping');
-                        
-                        document.getElementById('stepInfo').textContent += ' ➡️ 交換!';
-                        updateStats(); await sleep(1000);
+// 👉 產生數列
+function generateArray(){
+    n = getN();
+    array = [];
 
-                        bars[j].style.left = (j * (canvas.width / n)) + 'px';
-                        bars[j].style.height = (array[j] / 320) * (canvas.height - 60) + 'px';
-                        bars[j].textContent = array[j];
+    for(let i=0;i<n;i++){
+        array.push(Math.floor(Math.random()*300)+20);
+    }
 
-                        bars[j + 1].style.left = ((j + 1) * (canvas.width / n)) + 'px';
-                        bars[j + 1].style.height = (array[j + 1] / 320) * (canvas.height - 60) + 'px';
-                        bars[j + 1].textContent = array[j + 1];
+    draw();
+}
 
-                        swapped = true;
-                    }
+// 👉 畫圖（核心：自動調整寬度）
+function draw(){
+    canvas.innerHTML = "";
 
-                    bars[j].classList.remove('comparing', 'swapping');
-                    bars[j + 1].classList.remove('comparing', 'swapping');
-                    await sleep(300);
-                }
+    const barWidth = canvas.clientWidth / n;
 
-                bars[n - 1 - i].classList.add('sorted');
-                if (!swapped) break;
+    array.forEach((v,i)=>{
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.left = (i * barWidth) + "px";
+        bar.style.width = (barWidth * 0.9) + "px";
+
+        const h = (v / 320) * 380;
+        bar.style.height = h + "px";
+
+        bar.textContent = v;
+
+        canvas.appendChild(bar);
+    });
+}
+
+// 👉 sleep（動畫速度）
+function sleep(ms){
+    return new Promise(r=>setTimeout(r,ms));
+}
+
+// 👉 Bubble Sort
+async function bubbleSort(){
+    let bars = document.getElementsByClassName("bar");
+
+    for(let i=0;i<n-1;i++){
+        for(let j=0;j<n-i-1;j++){
+
+            while(isPaused) await sleep(100);
+
+            bars[j].classList.add("comparing");
+            bars[j+1].classList.add("comparing");
+
+            await sleep(speed);
+
+            if(array[j] > array[j+1]){
+
+                [array[j],array[j+1]] = [array[j+1],array[j]];
+
+                draw();
+                bars = document.getElementsByClassName("bar");
+
+                bars[j].classList.add("swapping");
+                bars[j+1].classList.add("swapping");
+
+                await sleep(speed);
             }
 
-            bars.forEach(bar => bar.classList.add('sorted'));
-            isSorting = false;
-            document.getElementById('stepInfo').textContent = '🎉 8組排序完成！';
+            bars[j].classList.remove("comparing","swapping");
+            bars[j+1].classList.remove("comparing","swapping");
         }
 
-        function startSort() {
-            if (isSorting) return;
-            isSorting = true; isPaused = false;
-            comparisons = 0; swaps = 0; startTime = Date.now();
-            updateStats(); bubbleSort();
-        }
+        bars[n-i-1].classList.add("sorted");
+    }
 
-        function pauseSort() { isPaused = !isPaused; }
-        
-        function resetSort() {
-            isSorting = false; isPaused = false;
-            comparisons = 0; swaps = 0; startTime = 0;
-            document.querySelectorAll('.bar').forEach(bar => {
-                bar.classList.remove('comparing', 'swapping', 'sorted');
-            });
-            generateArray();
-        }
+    isSorting = false;
+}
 
-        generateArray();
-        window.addEventListener('resize', () => {
-            canvas.width = canvas.offsetWidth; drawArray();
-        });
-    </script>
+// 👉 控制
+function startSort(){
+    if(isSorting) return;
+    isSorting = true;
+    bubbleSort();
+}
+
+function pauseSort(){
+    isPaused = !isPaused;
+}
+
+function resetSort(){
+    isSorting = false;
+    isPaused = false;
+    generateArray();
+}
+
+// init
+generateArray();
+
+</script>
+
 </body>
 </html>
