@@ -2,14 +2,11 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>快速排序法</title>
+<title>Quick Sort 視覺化</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-
 body{
-    font-family:"Microsoft JhengHei";
+    font-family:Microsoft JhengHei;
     background:linear-gradient(135deg,#667eea,#764ba2);
     padding:20px;
 }
@@ -17,43 +14,35 @@ body{
 .container{
     max-width:1100px;
     margin:auto;
-    background:rgba(255,255,255,0.95);
+    background:white;
+    padding:20px;
     border-radius:20px;
-    padding:25px;
 }
-
-h1{text-align:center;margin-bottom:10px;}
 
 .controls{
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
     gap:10px;
-    margin-bottom:15px;
+    margin-bottom:10px;
 }
 
-input,button{
+button,input{
     padding:10px;
     border:none;
     border-radius:10px;
-    font-size:14px;
+    font-weight:bold;
 }
 
-button{
-    background:#2196F3;
-    color:white;
-    font-weight:bold;
-    cursor:pointer;
-}
+button{background:#2196F3;color:white;cursor:pointer;}
 
 #canvas{
-    width:100%;
-    height:400px;
+    height:420px;
+    position:relative;
+    background:#fafafa;
     border:2px solid #ccc;
     border-radius:15px;
-    position:relative;
     overflow:hidden;
-    background:#fafafa;
     padding:0 20px;
 }
 
@@ -61,26 +50,36 @@ button{
     position:absolute;
     bottom:0;
     background:#2196F3;
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
     color:white;
     font-size:12px;
-    border-radius:6px 6px 0 0;
-    transition:all 0.3s ease;
+    text-align:center;
+    border-radius:5px 5px 0 0;
+    transition:0.3s;
 }
 
+.bar.active{background:orange;}
 .bar.pivot{background:purple;}
-.bar.comparing{background:orange;}
-.bar.sortedAll{background:#4CAF50 !important;}
+.bar.done{background:#4CAF50;}
+
+.legend{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-top:10px;
+}
+
+.box{width:12px;height:12px;display:inline-block;margin-right:5px;}
+.blue{background:#2196F3;}
+.orange{background:orange;}
+.purple{background:purple;}
+.green{background:#4CAF50;}
 
 .stats{
     display:flex;
     justify-content:center;
     gap:20px;
-    margin-top:10px;
     flex-wrap:wrap;
-    font-size:14px;
+    margin-top:10px;
 }
 </style>
 </head>
@@ -89,118 +88,133 @@ button{
 
 <div class="container">
 
-<h1>快速排序法視覺化</h1>
+<h2>Quick Sort</h2>
 
 <div class="controls">
-<button onclick="goBack()">⬅️ 返回</button>
-<input id="numInput" type="number" placeholder="組數(預設8)" min="3" max="50">
-<button onclick="generateArray()">產生數列</button>
-<button onclick="startSort()">開始排序</button>
-<button onclick="resetSort()">重置</button>
+<button onclick="goBack()">返回</button>
+<input id="num" type="number" placeholder="組數">
+<button onclick="generate()">生成</button>
+<button onclick="start()">開始</button>
+<button onclick="pause()">暫停</button>
+<button onclick="reset()">重置</button>
 </div>
 
 <div id="canvas"></div>
 
+<div class="legend">
+<div><span class="box blue"></span>未排序</div>
+<div><span class="box orange"></span>比較</div>
+<div><span class="box purple"></span>Pivot</div>
+<div><span class="box green"></span>完成</div>
+</div>
+
 <div class="stats">
-<div>比較：<span id="cmp">0</span></div>
-<div>交換：<span id="swp">0</span></div>
-<div>O(n log n)</div>
+比較:<span id="cmp">0</span>
+交換:<span id="swp">0</span>
+移動:<span id="mov">0</span>
+O(n log n)/O(1)
 </div>
 
 </div>
 
 <script>
 
-const canvas=document.getElementById("canvas");
+let arr=[],n=8;
+let cmp=0,swp=0,mov=0;
+let pauseFlag=false;
 
-let array=[],n=8;
-let cmp=0,swp=0;
-let isSorting=false;
-
-function goBack(){
-    if(confirm("確定返回？")) history.back();
-}
+function goBack(){window.history.back();}
 
 function getN(){
-    let v=parseInt(document.getElementById("numInput").value);
-    return (isNaN(v)||v<3)?8:v;
+let v=parseInt(document.getElementById("num").value);
+return isNaN(v)?8:v;
 }
 
-function generateArray(){
-    n=getN();
-    array=[];
-    for(let i=0;i<n;i++) array.push(Math.floor(Math.random()*300)+20);
-    draw();
+function generate(){
+n=getN();
+arr=Array.from({length:n},()=>Math.floor(Math.random()*300)+20);
+draw();
 }
 
 function draw(){
-    canvas.innerHTML="";
-    const w=(canvas.clientWidth-40)/n;
+let c=document.getElementById("canvas");
+c.innerHTML="";
+let w=(c.clientWidth-40)/n;
 
-    array.forEach((v,i)=>{
-        const bar=document.createElement("div");
-        bar.className="bar";
-        bar.style.left=(20+i*w+w*0.2)+"px";
-        bar.style.width=w*0.6+"px";
-        bar.style.height=(v/320)*380+"px";
-        bar.textContent=v;
-        canvas.appendChild(bar);
-    });
-}
-
-function update(){
-    document.getElementById("cmp").textContent=cmp;
-    document.getElementById("swp").textContent=swp;
+arr.forEach((v,i)=>{
+let b=document.createElement("div");
+b.className="bar";
+b.style.left=(20+i*w+w*0.2)+"px";
+b.style.width=w*0.6+"px";
+b.style.height=(v/320)*380+"px";
+b.textContent=v;
+c.appendChild(b);
+});
 }
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-async function quickSort(l,r){
-    if(l>=r) return;
-
-    let pivot=array[r];
-    let i=l-1;
-
-    for(let j=l;j<r;j++){
-        cmp++;
-        update();
-
-        if(array[j]<pivot){
-            i++;
-            [array[i],array[j]]=[array[j],array[i]];
-            swp++;
-            draw();
-            await sleep(150);
-        }
-    }
-
-    [array[i+1],array[r]]=[array[r],array[i+1]];
-    swp++;
-    draw();
-    await sleep(200);
-
-    let p=i+1;
-
-    await quickSort(l,p-1);
-    await quickSort(p+1,r);
+function update(){
+document.getElementById("cmp").textContent=cmp;
+document.getElementById("swp").textContent=swp;
+document.getElementById("mov").textContent=mov;
 }
 
-function startSort(){
-    if(isSorting) return;
-    isSorting=true;
-    cmp=swp=0;
-    update();
-    quickSort(0,n-1).then(()=>isSorting=false);
+async function quick(l,r){
+if(l>=r) return;
+
+let pivot=arr[r];
+let i=l-1;
+
+let bars=document.getElementsByClassName("bar");
+bars[r].classList.add("pivot");
+
+for(let j=l;j<r;j++){
+
+while(pauseFlag) await sleep(100);
+
+cmp++; update();
+
+bars[j].classList.add("active");
+
+await sleep(300);
+
+if(arr[j]<pivot){
+i++;
+[arr[i],arr[j]]=[arr[j],arr[i]];
+swp++; mov++;
+draw();
+bars=document.getElementsByClassName("bar");
 }
 
-function resetSort(){
-    isSorting=false;
-    cmp=swp=0;
-    update();
-    generateArray();
+bars[j].classList.remove("active");
 }
 
-generateArray();
+[arr[i+1],arr[r]]=[arr[r],arr[i+1]];
+draw();
+
+await quick(l,i);
+await quick(i+2,r);
+}
+
+async function start(){
+cmp=swp=mov=0;update();
+await quick(0,n-1);
+
+document.querySelectorAll(".bar").forEach(b=>{
+b.className="bar done";
+});
+}
+
+function pause(){pauseFlag=!pauseFlag;}
+
+function reset(){
+pauseFlag=false;
+cmp=swp=mov=0;update();
+generate();
+}
+
+generate();
 
 </script>
 
