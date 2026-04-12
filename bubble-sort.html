@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>氣泡排序法視覺化</title>
+<title>氣泡排序法</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -22,7 +22,7 @@ body{
     padding:25px;
 }
 
-h1{text-align:center;margin-bottom:15px;}
+h1{text-align:center;margin-bottom:10px;}
 
 .controls{
     display:flex;
@@ -34,16 +34,16 @@ h1{text-align:center;margin-bottom:15px;}
 
 input,button{
     padding:10px;
-    border-radius:10px;
     border:none;
+    border-radius:10px;
     font-size:14px;
 }
 
 button{
     background:#2196F3;
     color:white;
-    cursor:pointer;
     font-weight:bold;
+    cursor:pointer;
 }
 
 #canvas{
@@ -74,13 +74,36 @@ button{
 .bar.swapping{background:red;}
 .bar.sortedAll{background:#4CAF50 !important;}
 
-.stats{
+/* ⭐ 顏色圖例 */
+.legend{
     display:flex;
     justify-content:center;
     gap:20px;
     margin-top:10px;
     font-size:14px;
     flex-wrap:wrap;
+}
+
+.box{
+    width:14px;
+    height:14px;
+    display:inline-block;
+    margin-right:5px;
+    border-radius:3px;
+}
+
+.blue{background:#2196F3;}
+.orange{background:orange;}
+.red{background:red;}
+.green{background:#4CAF50;}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:10px;
+    flex-wrap:wrap;
+    font-size:14px;
 }
 
 </style>
@@ -100,19 +123,26 @@ button{
 
 <button onclick="generateArray()">產生數列</button>
 <button onclick="startSort()">開始排序</button>
-<button onclick="pauseSort()">暫停/繼續</button>
+<button onclick="pauseSort()">暫停</button>
 <button onclick="resetSort()">重置</button>
 
 </div>
 
 <div id="canvas"></div>
 
+<!-- ⭐ 顏色圖例 -->
+<div class="legend">
+    <div><span class="box blue"></span>未排序</div>
+    <div><span class="box orange"></span>比較中</div>
+    <div><span class="box red"></span>交換中</div>
+    <div><span class="box green"></span>已完成</div>
+</div>
+
 <div class="stats">
     <div>比較：<span id="cmp">0</span></div>
     <div>交換：<span id="swp">0</span></div>
     <div>移動：<span id="mov">0</span></div>
-    <div>時間複雜度：O(n²)</div>
-    <div>空間複雜度：O(1)</div>
+    <div>O(n²) / O(1)</div>
 </div>
 
 </div>
@@ -121,16 +151,12 @@ button{
 
 const canvas=document.getElementById("canvas");
 
-let array=[];
-let n=8;
-
-let isSorting=false;
-let isPaused=false;
-
+let array=[],n=8;
+let isSorting=false,isPaused=false;
 let cmp=0,swp=0,mov=0;
 
 function goBack(){
-    if(confirm("確定返回上一頁？")) window.history.back();
+    if(confirm("確定返回？")) window.history.back();
 }
 
 function getN(){
@@ -141,9 +167,7 @@ function getN(){
 function generateArray(){
     n=getN();
     array=[];
-    for(let i=0;i<n;i++){
-        array.push(Math.floor(Math.random()*300)+20);
-    }
+    for(let i=0;i<n;i++) array.push(Math.floor(Math.random()*300)+20);
     draw();
 }
 
@@ -154,19 +178,15 @@ function draw(){
     array.forEach((v,i)=>{
         const bar=document.createElement("div");
         bar.className="bar";
-
         bar.style.left=(20+i*w+w*0.2)+"px";
         bar.style.width=w*0.6+"px";
         bar.style.height=(v/320)*380+"px";
         bar.textContent=v;
-
         canvas.appendChild(bar);
     });
 }
 
-function sleep(ms){
-    return new Promise(r=>setTimeout(r,ms));
-}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 function update(){
     document.getElementById("cmp").textContent=cmp;
@@ -176,13 +196,10 @@ function update(){
 
 function finish(){
     let bars=document.getElementsByClassName("bar");
-    for(let b of bars){
-        b.className="bar sortedAll";
-    }
+    for(let b of bars) b.className="bar sortedAll";
 }
 
 async function bubbleSort(){
-
     let bars=document.getElementsByClassName("bar");
 
     for(let i=0;i<n-1;i++){
@@ -190,8 +207,7 @@ async function bubbleSort(){
 
             while(isPaused) await sleep(100);
 
-            cmp++;
-            update();
+            cmp++; update();
 
             bars[j].classList.add("comparing");
             bars[j+1].classList.add("comparing");
@@ -199,21 +215,15 @@ async function bubbleSort(){
             await sleep(300);
 
             if(array[j]>array[j+1]){
-
                 [array[j],array[j+1]]=[array[j+1],array[j]];
-                swp++;
-                mov++;
+                swp++; mov++;
 
                 draw();
                 bars=document.getElementsByClassName("bar");
-
-                bars[j].classList.add("swapping");
-
-                await sleep(300);
             }
 
-            bars[j].classList.remove("comparing","swapping");
-            bars[j+1].classList.remove("comparing","swapping");
+            bars[j].classList.remove("comparing");
+            bars[j+1].classList.remove("comparing");
         }
 
         bars[n-i-1].classList.add("sortedAll");
@@ -225,26 +235,19 @@ async function bubbleSort(){
 
 function startSort(){
     if(isSorting) return;
-
     isSorting=true;
-
     cmp=swp=mov=0;
     update();
-
     bubbleSort();
 }
 
-function pauseSort(){
-    isPaused=!isPaused;
-}
+function pauseSort(){isPaused=!isPaused;}
 
 function resetSort(){
     isSorting=false;
     isPaused=false;
-
     cmp=swp=mov=0;
     update();
-
     generateArray();
 }
 

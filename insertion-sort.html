@@ -1,17 +1,278 @@
-def insertion_sort(arr):
-    # 從第二個元素開始，因為第一個元素視為已排序
-    for i in range(1, len(arr)):
-        key = arr[i]  # 當前要插入的元素
-        j = i - 1
-        # 將 key 插入到已排序部分的正確位置
-        while j >= 0 and arr[j] > key:
-            arr[j + 1] = arr[j]  # 向右移動元素
-            j -= 1
-        arr[j + 1] = key  # 插入元素
-    return arr
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>插入排序法視覺化</title>
 
-if __name__ == "__main__":
-    data = [64, 34, 25, 12, 22, 11, 90]
-    print("原始陣列:", data)
-    sorted_data = insertion_sort(data)
-    print("排序後陣列:", sorted_data)
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    font-family:"Microsoft JhengHei";
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    background:rgba(255,255,255,0.95);
+    border-radius:20px;
+    padding:25px;
+}
+
+h1{text-align:center;margin-bottom:10px;}
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+input,button{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    font-size:14px;
+}
+
+button{
+    background:#2196F3;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#canvas{
+    width:100%;
+    height:400px;
+    position:relative;
+    border:2px solid #ccc;
+    border-radius:15px;
+    background:#fafafa;
+    overflow:hidden;
+    padding:0 20px;
+}
+
+.bar{
+    position:absolute;
+    bottom:0;
+    background:#2196F3;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    color:white;
+    font-size:12px;
+    border-radius:6px 6px 0 0;
+    transition:all 0.3s ease;
+}
+
+.bar.comparing{background:orange;}
+.bar.key{background:purple;}
+.bar.sortedAll{background:#4CAF50 !important;}
+
+/* ⭐ 圖例 */
+.legend{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:10px;
+    flex-wrap:wrap;
+    font-size:14px;
+}
+
+.box{
+    width:14px;
+    height:14px;
+    display:inline-block;
+    margin-right:5px;
+    border-radius:3px;
+}
+
+.blue{background:#2196F3;}
+.orange{background:orange;}
+.purple{background:purple;}
+.green{background:#4CAF50;}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:10px;
+    flex-wrap:wrap;
+    font-size:14px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>插入排序法視覺化</h1>
+
+<div class="controls">
+
+<button onclick="goBack()">⬅️ 返回首頁</button>
+
+<input id="numInput" type="number" placeholder="組數(預設8)" min="3" max="50">
+
+<button onclick="generateArray()">產生數列</button>
+<button onclick="startSort()">開始排序</button>
+<button onclick="pauseSort()">暫停</button>
+<button onclick="resetSort()">重置</button>
+
+</div>
+
+<div id="canvas"></div>
+
+<!-- ⭐ 圖例 -->
+<div class="legend">
+    <div><span class="box blue"></span>未排序</div>
+    <div><span class="box orange"></span>比較中</div>
+    <div><span class="box purple"></span>插入元素</div>
+    <div><span class="box green"></span>完成</div>
+</div>
+
+<div class="stats">
+    <div>比較：<span id="cmp">0</span></div>
+    <div>交換：<span id="swp">0</span></div>
+    <div>移動：<span id="mov">0</span></div>
+    <div>O(n²) / O(1)</div>
+</div>
+
+</div>
+
+<script>
+
+const canvas=document.getElementById("canvas");
+
+let array=[],n=8;
+let isSorting=false,isPaused=false;
+
+let cmp=0,swp=0,mov=0;
+
+function goBack(){
+    if(confirm("確定返回？")) window.history.back();
+}
+
+function getN(){
+    let v=parseInt(document.getElementById("numInput").value);
+    return (isNaN(v)||v<3)?8:v;
+}
+
+function generateArray(){
+    n=getN();
+    array=[];
+    for(let i=0;i<n;i++) array.push(Math.floor(Math.random()*300)+20);
+    draw();
+}
+
+function draw(){
+    canvas.innerHTML="";
+    const w=(canvas.clientWidth-40)/n;
+
+    array.forEach((v,i)=>{
+        const bar=document.createElement("div");
+        bar.className="bar";
+
+        bar.style.left=(20+i*w+w*0.2)+"px";
+        bar.style.width=w*0.6+"px";
+        bar.style.height=(v/320)*380+"px";
+        bar.textContent=v;
+
+        canvas.appendChild(bar);
+    });
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function update(){
+    document.getElementById("cmp").textContent=cmp;
+    document.getElementById("swp").textContent=swp;
+    document.getElementById("mov").textContent=mov;
+}
+
+function finish(){
+    let bars=document.getElementsByClassName("bar");
+    for(let b of bars) b.className="bar sortedAll";
+}
+
+async function insertionSort(){
+
+    let bars=document.getElementsByClassName("bar");
+
+    for(let i=1;i<n;i++){
+
+        let key=array[i];
+        let j=i-1;
+
+        bars[i].classList.add("key");
+
+        while(j>=0 && array[j]>key){
+
+            while(isPaused) await sleep(100);
+
+            cmp++;
+            update();
+
+            array[j+1]=array[j];
+            mov++;
+
+            draw();
+            bars=document.getElementsByClassName("bar");
+
+            bars[j].classList.add("comparing");
+
+            await sleep(300);
+
+            j--;
+        }
+
+        array[j+1]=key;
+        mov++;
+
+        draw();
+        bars=document.getElementsByClassName("bar");
+
+        bars[i].classList.remove("key");
+    }
+
+    finish();
+    isSorting=false;
+}
+
+// 控制
+function startSort(){
+    if(isSorting) return;
+
+    isSorting=true;
+
+    cmp=swp=mov=0;
+    update();
+
+    insertionSort();
+}
+
+function pauseSort(){isPaused=!isPaused;}
+
+function resetSort(){
+    isSorting=false;
+    isPaused=false;
+
+    cmp=swp=mov=0;
+    update();
+
+    generateArray();
+}
+
+generateArray();
+
+</script>
+
+</body>
+</html>

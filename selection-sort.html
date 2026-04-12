@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>選擇排序法視覺化</title>
+<title>選擇排序法</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -22,7 +22,7 @@ body{
     padding:25px;
 }
 
-h1{text-align:center;margin-bottom:15px;}
+h1{text-align:center;margin-bottom:10px;}
 
 .controls{
     display:flex;
@@ -34,24 +34,22 @@ h1{text-align:center;margin-bottom:15px;}
 
 input,button{
     padding:10px;
-    border-radius:10px;
     border:none;
-    font-size:14px;
+    border-radius:10px;
 }
 
 button{
     background:#2196F3;
     color:white;
     font-weight:bold;
-    cursor:pointer;
 }
 
 #canvas{
     width:100%;
     height:400px;
+    position:relative;
     border:2px solid #ccc;
     border-radius:15px;
-    position:relative;
     overflow:hidden;
     background:#fafafa;
     padding:0 20px;
@@ -73,6 +71,27 @@ button{
 .bar.comparing{background:orange;}
 .bar.min{background:purple;}
 .bar.sortedAll{background:#4CAF50 !important;}
+
+/* ⭐ 圖例 */
+.legend{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-top:10px;
+    flex-wrap:wrap;
+}
+
+.box{
+    width:14px;height:14px;
+    border-radius:3px;
+    display:inline-block;
+    margin-right:5px;
+}
+
+.blue{background:#2196F3;}
+.orange{background:orange;}
+.purple{background:purple;}
+.green{background:#4CAF50;}
 
 .stats{
     display:flex;
@@ -106,6 +125,14 @@ button{
 
 <div id="canvas"></div>
 
+<!-- ⭐ 圖例 -->
+<div class="legend">
+    <div><span class="box blue"></span>未排序</div>
+    <div><span class="box orange"></span>比較</div>
+    <div><span class="box purple"></span>最小值</div>
+    <div><span class="box green"></span>完成</div>
+</div>
+
 <div class="stats">
     <div>比較：<span id="cmp">0</span></div>
     <div>交換：<span id="swp">0</span></div>
@@ -119,16 +146,12 @@ button{
 
 const canvas=document.getElementById("canvas");
 
-let array=[];
-let n=8;
-
-let isSorting=false;
-let isPaused=false;
-
+let array=[],n=8;
+let isSorting=false,isPaused=false;
 let cmp=0,swp=0,mov=0;
 
 function goBack(){
-    if(confirm("確定返回上一頁？")) window.history.back();
+    if(confirm("確定返回？")) window.history.back();
 }
 
 function getN(){
@@ -139,9 +162,7 @@ function getN(){
 function generateArray(){
     n=getN();
     array=[];
-    for(let i=0;i<n;i++){
-        array.push(Math.floor(Math.random()*300)+20);
-    }
+    for(let i=0;i<n;i++) array.push(Math.floor(Math.random()*300)+20);
     draw();
 }
 
@@ -162,9 +183,7 @@ function draw(){
     });
 }
 
-function sleep(ms){
-    return new Promise(r=>setTimeout(r,ms));
-}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
 function update(){
     document.getElementById("cmp").textContent=cmp;
@@ -174,9 +193,7 @@ function update(){
 
 function finish(){
     let bars=document.getElementsByClassName("bar");
-    for(let b of bars){
-        b.className="bar sortedAll";
-    }
+    for(let b of bars) b.className="bar sortedAll";
 }
 
 async function selectionSort(){
@@ -192,8 +209,7 @@ async function selectionSort(){
 
             while(isPaused) await sleep(100);
 
-            cmp++;
-            update();
+            cmp++; update();
 
             bars[j].classList.add("comparing");
             await sleep(300);
@@ -208,11 +224,8 @@ async function selectionSort(){
         }
 
         if(min!==i){
-
             [array[i],array[min]]=[array[min],array[i]];
-            swp++;
-            mov++;
-
+            swp++; mov++;
             draw();
             bars=document.getElementsByClassName("bar");
         }
@@ -226,25 +239,19 @@ async function selectionSort(){
 
 function startSort(){
     if(isSorting) return;
-
     isSorting=true;
     cmp=swp=mov=0;
     update();
-
     selectionSort();
 }
 
-function pauseSort(){
-    isPaused=!isPaused;
-}
+function pauseSort(){isPaused=!isPaused;}
 
 function resetSort(){
     isSorting=false;
     isPaused=false;
-
     cmp=swp=mov=0;
     update();
-
     generateArray();
 }
 
